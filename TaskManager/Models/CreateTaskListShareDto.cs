@@ -5,11 +5,15 @@ namespace TaskManager.Models
     public class CreateTaskListShareDto
     {
         [Required]
-        public int TaskListId { get; set; }
+        [Range(1, int.MaxValue)]
+        public int OwnerUserId { get; set; }
 
         [Required]
+        [Range(1, int.MaxValue)]
         public int UserId { get; set; }
+
         [Required]
-        public int OwnerUserId { get; set; }
+        [Range(1, int.MaxValue)]
+        public int TaskListId { get; set; }
     }
 }

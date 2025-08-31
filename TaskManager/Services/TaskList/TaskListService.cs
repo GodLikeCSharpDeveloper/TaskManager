@@ -11,10 +11,10 @@ namespace TaskManager.Services.TaskList
         private readonly ITaskListRepository _repo = taskListRepository;
         private readonly IMapper _mapper = mapper;
 
-        public Task CreateAsync(CreateTaskListDto createTaskListDto)
+        public async Task CreateAsync(CreateTaskListDto createTaskListDto)
         {
             var model = _mapper.Map<TaskListModel>(createTaskListDto);
-            return _repo.CreateAsync(model);
+            await _repo.CreateAsync(model);
         }
 
         public async Task<bool> UpdateAsync(int ownerId, UpdateTaskListModelDto taskListModel)

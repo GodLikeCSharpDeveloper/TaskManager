@@ -11,6 +11,9 @@ public class TaskListShareController(ITaskListShareService taskListShareService)
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateTaskListShareDto dto)
     {
+        if (ModelState.IsValid)
+            return BadRequest(ModelState);
+
         var isCreated = await taskListShareService.CreateAsync(dto);
         return isCreated ? Ok() : StatusCode(403);
     }

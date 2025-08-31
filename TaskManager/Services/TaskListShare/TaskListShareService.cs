@@ -28,7 +28,6 @@ namespace TaskManager.Services.TaskListShare
             return true;
         }
 
-
         public async Task<bool> DeleteAsync(int userId, int taskListId)
         {
             var hasAccess = await _taskListService.HasAccessAsync(userId, taskListId);

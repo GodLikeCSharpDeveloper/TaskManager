@@ -9,6 +9,7 @@ namespace TaskManager.Models
         public string Name { get; set; } = default!;
 
         [Required]
+        [Range(1, int.MaxValue)]
         public int OwnerId { get; set; }
     }
 }

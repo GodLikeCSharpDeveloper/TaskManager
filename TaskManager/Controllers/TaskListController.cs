@@ -11,6 +11,9 @@ public class TaskListsController(ITaskListService taskListService) : ControllerB
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateTaskListDto dto)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         await taskListService.CreateAsync(dto);
         return Ok();
     }
@@ -18,6 +21,9 @@ public class TaskListsController(ITaskListService taskListService) : ControllerB
     [HttpPut("{taskListId:int}")]
     public async Task<IActionResult> Update(int taskListId, [FromBody] UpdateTaskListModelDto model, [FromQuery] int userId)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         if (taskListId != model.Id)
             return BadRequest();
 
@@ -38,7 +44,6 @@ public class TaskListsController(ITaskListService taskListService) : ControllerB
         var result = await taskListService.GetOwnedOrShared(userId, page, pageSize);
         return Ok(result);
     }
-
 
     [HttpGet("{taskListId:int}/shares")]
     public async Task<IActionResult> GetShares(int taskListId, [FromQuery] int userId)
