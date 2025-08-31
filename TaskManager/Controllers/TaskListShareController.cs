@@ -1,0 +1,24 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using TaskManager.Models;
+using TaskManager.Services.TaskListShare;
+
+namespace TaskManager.Controllers;
+
+[ApiController]
+[Route("api/task-list-shares")]
+public class TaskListShareController(ITaskListShareService taskListShareService) : ControllerBase
+{
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CreateTaskListShareDto dto)
+    {
+        var isCreated = await taskListShareService.CreateAsync(dto);
+        return isCreated ? Ok() : StatusCode(403);
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> Delete([FromQuery] int userId, [FromQuery] int taskListId)
+    {
+        var isDeleted = await taskListShareService.DeleteAsync(userId, taskListId);
+        return isDeleted ? Ok() : StatusCode(403);
+    }
+}
