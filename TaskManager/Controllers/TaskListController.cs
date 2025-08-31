@@ -15,10 +15,10 @@ public class TaskListsController(ITaskListService taskListService) : ControllerB
         return Ok();
     }
 
-    [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateTaskListModelDto model, [FromQuery] int userId)
+    [HttpPut("{taskListId:int}")]
+    public async Task<IActionResult> Update(int taskListId, [FromBody] UpdateTaskListModelDto model, [FromQuery] int userId)
     {
-        if (id != model.Id)
+        if (taskListId != model.Id)
             return BadRequest();
 
         var isUpdated = await taskListService.UpdateAsync(userId, model);
@@ -26,31 +26,31 @@ public class TaskListsController(ITaskListService taskListService) : ControllerB
         return isUpdated ? Ok() : StatusCode(403);
     }
 
-    [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetById(int id, [FromQuery] int userId)
+    [HttpGet("{taskListId:int}")]
+    public async Task<IActionResult> GetById(int taskListId, [FromQuery] int userId)
     {
-        var result = await taskListService.FindByIdAsync(userId, id);
+        var result = await taskListService.FindByIdAsync(userId, taskListId);
         return result is not null ? Ok(result) : NotFound();
     }
-
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] int userId, [FromQuery] int skip = 0, [FromQuery] int take = 20)
+    public async Task<IActionResult> GetAll([FromQuery] int userId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var result = await taskListService.GetOwnedOrShared(userId, skip, take);
+        var result = await taskListService.GetOwnedOrShared(userId, page, pageSize);
         return Ok(result);
     }
 
-    [HttpGet("{id:int}/shares")]
-    public async Task<IActionResult> GetShares(int id, [FromQuery] int userId)
+
+    [HttpGet("{taskListId:int}/shares")]
+    public async Task<IActionResult> GetShares(int taskListId, [FromQuery] int userId)
     {
-        var result = await taskListService.FindSharedUsersAsync(userId, id);
+        var result = await taskListService.FindSharedUsersAsync(userId, taskListId);
         return result is not null ? Ok(result) : NotFound();
     }
 
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id, [FromQuery] int userId)
+    [HttpDelete("{taskListId:int}")]
+    public async Task<IActionResult> Delete(int taskListId, [FromQuery] int userId)
     {
-        var isDeleted = await taskListService.DeleteAsync(userId, id);
+        var isDeleted = await taskListService.DeleteAsync(userId, taskListId);
         return isDeleted ? Ok() : StatusCode(403);
     }
 }

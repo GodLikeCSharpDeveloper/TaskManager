@@ -66,8 +66,11 @@ namespace TaskManager.Services.TaskList
             return null;
         }
 
-        public async Task<List<FindTaskListWithSharesDto>> GetOwnedOrShared(int userId, int skip, int take)
+        public async Task<List<FindTaskListWithSharesDto>> GetOwnedOrShared(int userId, int page, int pageSize)
         {
+            var skip = (page - 1) * pageSize;
+            var take = pageSize;
+
             var models = await _repo
                 .AsQueryable()
                 .Include(t => t.Shares)

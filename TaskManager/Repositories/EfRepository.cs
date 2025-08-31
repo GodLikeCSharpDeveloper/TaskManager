@@ -9,15 +9,6 @@ namespace TaskManager.Repositories
 
         public Task<T?> GetByIdAsync(int id) => _dbSet.FirstOrDefaultAsync(e => e.Id == id);
 
-        public Task<List<T>> GetAllAsync() => _dbSet.ToListAsync();
-
-        public Task<List<T>> GetPagedAsync(int skip, int take) =>
-              _dbSet
-                .OrderByDescending(e => EF.Property<DateTime>(e, "CreatedAt"))
-                .Skip(skip)
-                .Take(take)
-                .ToListAsync();
-
         public Task CreateAsync(T entity)
         {
             _dbSet.Add(entity);
