@@ -4,12 +4,11 @@ namespace TaskManager.Models
 {
     public class UpdateTaskListModelDto
     {
-        [Required]
-        [Range(1, int.MaxValue)]
-        public int Id { get; set; }
+        [StringLength(255, MinimumLength = 1)]
+        public string? Name { get; set; }
 
-        public string Name { get; set; } = default!;
-        public int OwnerId { get; set; }
-        public List<CreateTaskListShareDto> Shares { get; set; } = [];
+        [Range(1, int.MaxValue)]
+        public int? OwnerId { get; set; }
+        public List<int>? SharedUserIds { get; set; }
     }
 }

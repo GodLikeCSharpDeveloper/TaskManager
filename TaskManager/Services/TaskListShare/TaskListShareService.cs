@@ -13,12 +13,12 @@ namespace TaskManager.Services.TaskListShare
         private readonly ITaskListService _taskListService = taskListService;
         private readonly IMapper _mapper = mapper;
 
-        public async Task<bool> CreateAsync(CreateTaskListShareDto createTaskListShare)
+        public async Task<bool> CreateAsync(int ownerId, CreateTaskListShareDto createTaskListShare)
         {
-            if (createTaskListShare.UserId == createTaskListShare.OwnerUserId)
+            if (createTaskListShare.UserId == ownerId)
                 return false;
 
-            var hasAccess = await _taskListService.HasAccessAsync(createTaskListShare.OwnerUserId, createTaskListShare.TaskListId);
+            var hasAccess = await _taskListService.HasAccessAsync(ownerId, createTaskListShare.TaskListId);
             if (!hasAccess)
                 return false;
 
@@ -28,13 +28,13 @@ namespace TaskManager.Services.TaskListShare
             return true;
         }
 
-        public async Task<bool> DeleteAsync(int userId, int taskListId)
+        public async Task<bool> DeleteAsync(int ownerId, int taskListId)
         {
-            var hasAccess = await _taskListService.HasAccessAsync(userId, taskListId);
+            var hasAccess = await _taskListService.HasAccessAsync(ownerId, taskListId);
             if (hasAccess)
             {
                 await _repo.AsQueryable()
-                    .Where(x => x.TaskListId == taskListId && x.UserId == userId)
+                    .Where(x => x.TaskListId == taskListId && x.UserId == ownerId)
                     .ExecuteDeleteAsync();
             }
 

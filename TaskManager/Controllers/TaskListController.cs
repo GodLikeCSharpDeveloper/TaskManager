@@ -19,43 +19,43 @@ public class TaskListsController(ITaskListService taskListService) : ControllerB
     }
 
     [HttpPut("{taskListId:int}")]
-    public async Task<IActionResult> Update(int taskListId, [FromBody] UpdateTaskListModelDto model, [FromQuery] int userId)
+    public async Task<IActionResult> Update([FromQuery] int ownerId, int taskListId, [FromBody] UpdateTaskListModelDto model)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        if (taskListId != model.Id)
-            return BadRequest();
-
-        var isUpdated = await taskListService.UpdateAsync(userId, model);
+        var isUpdated = await taskListService.UpdateAsync(ownerId, model, taskListId);
 
         return isUpdated ? Ok() : StatusCode(403);
     }
 
     [HttpGet("{taskListId:int}")]
-    public async Task<IActionResult> GetById(int taskListId, [FromQuery] int userId)
+    public async Task<IActionResult> GetById(int taskListId, [FromQuery] int ownerId)
     {
-        var result = await taskListService.FindByIdAsync(userId, taskListId);
-        return result is not null ? Ok(result) : NotFound();
+        var result = await taskListService.FindByIdAsync(ownerId, taskListId);
+        return result != null ? Ok(result) : NotFound();
     }
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] int userId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    public async Task<IActionResult> GetAll([FromQuery] int ownerId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var result = await taskListService.GetOwnedOrShared(userId, page, pageSize);
+        if (pageSize > 100 || pageSize <= 0 || page < 1)
+            return BadRequest("Invalid paging parameters");
+
+        var result = await taskListService.GetOwnedOrShared(ownerId, page, pageSize);
         return Ok(result);
     }
 
     [HttpGet("{taskListId:int}/shares")]
-    public async Task<IActionResult> GetShares(int taskListId, [FromQuery] int userId)
+    public async Task<IActionResult> GetShares(int taskListId, [FromQuery] int ownerId)
     {
-        var result = await taskListService.FindSharedUsersAsync(userId, taskListId);
-        return result is not null ? Ok(result) : NotFound();
+        var result = await taskListService.FindSharedUsersAsync(ownerId, taskListId);
+        return result != null ? Ok(result) : NotFound();
     }
 
     [HttpDelete("{taskListId:int}")]
-    public async Task<IActionResult> Delete(int taskListId, [FromQuery] int userId)
+    public async Task<IActionResult> Delete(int taskListId, [FromQuery] int ownerId)
     {
-        var isDeleted = await taskListService.DeleteAsync(userId, taskListId);
+        var isDeleted = await taskListService.DeleteAsync(ownerId, taskListId);
         return isDeleted ? Ok() : StatusCode(403);
     }
 }
