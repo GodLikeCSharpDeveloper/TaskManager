@@ -9,19 +9,19 @@ namespace TaskManager.Controllers;
 public class TaskListShareController(ITaskListShareService taskListShareService) : ControllerBase
 {
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateTaskListShareDto dto)
+    public async Task<IActionResult> Create([FromQuery] int ownerId, [FromBody] CreateTaskListShareDto dto)
     {
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var isCreated = await taskListShareService.CreateAsync(dto);
+        var isCreated = await taskListShareService.CreateAsync(ownerId, dto);
         return isCreated ? Ok() : StatusCode(403);
     }
 
     [HttpDelete]
-    public async Task<IActionResult> Delete([FromQuery] int userId, [FromQuery] int taskListId)
+    public async Task<IActionResult> Delete([FromQuery] int ownerId, [FromQuery] int taskListId)
     {
-        var isDeleted = await taskListShareService.DeleteAsync(userId, taskListId);
+        var isDeleted = await taskListShareService.DeleteAsync(ownerId, taskListId);
         return isDeleted ? Ok() : StatusCode(403);
     }
 }

@@ -17,47 +17,58 @@ namespace TaskManager.Services.TaskList
             await _repo.CreateAsync(model);
         }
 
-        public async Task<bool> UpdateAsync(int ownerId, UpdateTaskListModelDto taskListModel)
+        public async Task<bool> UpdateAsync(int ownerId, UpdateTaskListModelDto taskListModel, int taskListId)
         {
-            var hasAccess = await HasAccessAsync(ownerId, taskListModel.Id);
+            var hasAccess = await HasAccessAsync(ownerId, taskListId);
             if (!hasAccess)
                 return false;
 
-            var entity = await _repo.GetByIdAsync(taskListModel.Id);
+            var entity = await _repo.FindByIdWithSharesAsync(taskListId);
             if (entity == null)
                 return false;
 
             if (!string.IsNullOrWhiteSpace(taskListModel.Name))
                 entity.Name = taskListModel.Name;
 
-            if (taskListModel.OwnerId != 0)
-                entity.OwnerId = taskListModel.OwnerId;
+            if (taskListModel.OwnerId.HasValue)
+                entity.OwnerId = taskListModel.OwnerId.Value;
 
-            if (taskListModel.Shares.Count > 0)
-                entity.Shares = taskListModel.Shares
-                    .Select(s => new TaskListShareModel
+            if (taskListModel.SharedUserIds?.Count > 0)
+            {
+                var currentUserIds = entity.Shares.Select(s => s.UserId).ToHashSet();
+                var newUserIds = taskListModel.SharedUserIds
+                    .Where(id => id != ownerId)
+                    .ToHashSet();
+
+                entity.Shares.RemoveAll(s => !newUserIds.Contains(s.UserId));
+
+                var toAdd = newUserIds.Except(currentUserIds);
+                foreach (var userId in toAdd)
+                {
+                    entity.Shares.Add(new TaskListShareModel
                     {
-                        TaskListId = taskListModel.Id,
-                        UserId = s.UserId
-                    })
-                    .ToList();
+                        TaskListId = taskListId,
+                        UserId = userId
+                    });
+                }
+            }
 
             await _repo.UpdateAsync(entity);
             return true;
         }
 
-        public async Task<bool> DeleteAsync(int userId, int taskListId)
+        public async Task<bool> DeleteAsync(int ownerId, int taskListId)
         {
-            var isOwner = await IsOwnerAsync(userId, taskListId);
+            var isOwner = await IsOwnerAsync(ownerId, taskListId);
             if (isOwner)
                 await _repo.DeleteAsync(taskListId);
 
             return isOwner;
         }
 
-        public async Task<FindTaskListWithSharesDto?> FindByIdAsync(int userId, int taskListId)
+        public async Task<FindTaskListWithSharesDto?> FindByIdAsync(int ownerId, int taskListId)
         {
-            if (await HasAccessAsync(userId, taskListId))
+            if (await HasAccessAsync(ownerId, taskListId))
             {
                 var dbObject = await _repo.FindByIdWithSharesAsync(taskListId);
                 return _mapper.Map<FindTaskListWithSharesDto>(dbObject);
@@ -66,7 +77,7 @@ namespace TaskManager.Services.TaskList
             return null;
         }
 
-        public async Task<List<FindTaskListWithSharesDto>> GetOwnedOrShared(int userId, int page, int pageSize)
+        public async Task<List<FindTaskListWithSharesDto>> GetOwnedOrShared(int ownerId, int page, int pageSize)
         {
             var skip = (page - 1) * pageSize;
             var take = pageSize;
@@ -75,8 +86,8 @@ namespace TaskManager.Services.TaskList
                 .AsQueryable()
                 .Include(t => t.Shares)
                 .Where(task =>
-                    task.OwnerId == userId ||
-                    task.Shares.Any(share => share.UserId == userId))
+                    task.OwnerId == ownerId ||
+                    task.Shares.Any(share => share.UserId == ownerId))
                 .OrderByDescending(task => task.CreatedAt)
                 .Skip(skip)
                 .Take(take)
@@ -85,9 +96,9 @@ namespace TaskManager.Services.TaskList
             return _mapper.Map<List<FindTaskListWithSharesDto>>(models);
         }
 
-        public async Task<FindTaskListSharedUsersDto?> FindSharedUsersAsync(int userId, int taskListId)
+        public async Task<FindTaskListSharedUsersDto?> FindSharedUsersAsync(int ownerId, int taskListId)
         {
-            if (await HasAccessAsync(userId, taskListId))
+            if (await HasAccessAsync(ownerId, taskListId))
             {
                 return await _repo.AsQueryable()
                     .Include(s => s.Shares)
@@ -99,9 +110,9 @@ namespace TaskManager.Services.TaskList
             return null;
         }
 
-        public async Task<bool> HasAccessAsync(int userId, int taskListId)
+        public async Task<bool> HasAccessAsync(int ownerId, int taskListId)
         {
-            if (userId == 0 || taskListId == 0)
+            if (ownerId == 0 || taskListId == 0)
                 return false;
 
             var taskList = await _repo.AsQueryable()
@@ -116,16 +127,16 @@ namespace TaskManager.Services.TaskList
             if (taskList == null)
                 return false;
 
-            return taskList.OwnerId == userId || taskList.Shares.Contains(userId);
+            return taskList.OwnerId == ownerId || taskList.Shares.Contains(ownerId);
         }
 
-        public async Task<bool> IsOwnerAsync(int userId, int taskListId)
+        public async Task<bool> IsOwnerAsync(int ownerId, int taskListId)
         {
-            if (userId == 0 || taskListId == 0)
+            if (ownerId == 0 || taskListId == 0)
                 return false;
 
             return await _repo.AsQueryable()
-                .AnyAsync(t => t.Id == taskListId && t.OwnerId == userId);
+                .AnyAsync(t => t.Id == taskListId && t.OwnerId == ownerId);
         }
     }
 }
