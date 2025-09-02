@@ -36,7 +36,7 @@ public class TaskListsController(ITaskListService taskListService) : ControllerB
     public async Task<IActionResult> GetById(int taskListId, [FromQuery] int userId)
     {
         var result = await taskListService.FindByIdAsync(userId, taskListId);
-        return result is not null ? Ok(result) : NotFound();
+        return result != null ? Ok(result) : NotFound();
     }
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] int userId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
@@ -49,7 +49,7 @@ public class TaskListsController(ITaskListService taskListService) : ControllerB
     public async Task<IActionResult> GetShares(int taskListId, [FromQuery] int userId)
     {
         var result = await taskListService.FindSharedUsersAsync(userId, taskListId);
-        return result is not null ? Ok(result) : NotFound();
+        return result != null ? Ok(result) : NotFound();
     }
 
     [HttpDelete("{taskListId:int}")]

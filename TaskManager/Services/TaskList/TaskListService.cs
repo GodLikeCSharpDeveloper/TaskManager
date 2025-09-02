@@ -24,7 +24,7 @@ namespace TaskManager.Services.TaskList
                 return false;
 
             var entity = await _repo.GetByIdAsync(taskListModel.Id);
-            if (entity is null)
+            if (entity == null)
                 return false;
 
             if (!string.IsNullOrWhiteSpace(taskListModel.Name))
